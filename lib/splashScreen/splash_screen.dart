@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:drivers_app/authentication/login_screen.dart';
 import 'package:drivers_app/authentication/signup_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -16,7 +17,7 @@ class _MySplashScreenState extends State<MySplashScreen> {
       //send user to Main Screen
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => SignUpScreen()),
+        MaterialPageRoute(builder: (context) => LoginScreen()),
       );
     });
   }
