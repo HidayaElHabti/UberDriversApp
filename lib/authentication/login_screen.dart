@@ -1,5 +1,10 @@
 import 'package:drivers_app/authentication/signup_screen.dart';
+import 'package:drivers_app/global/global.dart';
+import 'package:drivers_app/splashScreen/splash_screen.dart';
+import 'package:drivers_app/widgets/progress_dialog.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -9,6 +14,46 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
+  validateForm() {
+    if (!_emailController.text.contains('@')) {
+      Fluttertoast.showToast(msg: "Email is not valid");
+    } else if (_passwordController.text.isEmpty) {
+      Fluttertoast.showToast(msg: "Password is required");
+    } else {
+      loginDriver();
+    }
+  }
+
+  loginDriver() async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return ProgressDialog(message: "Processing, Please wait ...");
+      },
+    );
+    final User? firebaseUser = (await fAuth
+            .signInWithEmailAndPassword(
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+    )
+            .catchError((msg) {
+      Navigator.pop(context);
+      Fluttertoast.showToast(msg: 'Error: $msg');
+    }))
+        .user;
+    if (firebaseUser != null) {
+      currentUser = firebaseUser;
+      Fluttertoast.showToast(msg: "Logged in successfully");
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => MySplashScreen()));
+    } else {
+      Navigator.pop(context);
+      Fluttertoast.showToast(msg: 'Error occured while logging in');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -86,10 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
-                  // Navigator.push(
-                  //     context,
-                  //     MaterialPageRoute(
-                  //         builder: (context) => const CarInfoScreen()));
+                  validateForm();
                 },
                 style: ElevatedButton.styleFrom(
                   primary: Colors.lightGreenAccent,

@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:drivers_app/authentication/login_screen.dart';
 import 'package:drivers_app/authentication/signup_screen.dart';
+import 'package:drivers_app/global/global.dart';
+import 'package:drivers_app/mainScreens/main_screen.dart';
 import 'package:flutter/material.dart';
 
 class MySplashScreen extends StatefulWidget {
@@ -14,11 +16,18 @@ class MySplashScreen extends StatefulWidget {
 class _MySplashScreenState extends State<MySplashScreen> {
   startTimer() {
     Timer(const Duration(seconds: 3), () async {
-      //send user to Main Screen
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => LoginScreen()),
-      );
+      if (fAuth.currentUser != null) {
+        currentUser = fAuth.currentUser;
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const MainScreen()),
+        );
+      } else {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => LoginScreen()),
+        );
+      }
     });
   }
 
