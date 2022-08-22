@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "653632176773",
+    "firebase_url": "https://uber-and-indriver-clone-default-rtdb.firebaseio.com",
+    "project_id": "uber-and-indriver-clone",
+    "storage_bucket": "uber-and-indriver-clone.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:653632176773:android:0800b1f837f189c3f2dfec",
+        "android_client_info": {
+          "package_name": "com.example.drivers_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "653632176773-m6d2lcqa1fc6j3vitul6i5aa5lrha1ui.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAxYAGlQ5f0uxCwFiESUJhgw5YQIMOT-LY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "653632176773-m6d2lcqa1fc6j3vitul6i5aa5lrha1ui.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
