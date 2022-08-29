@@ -63,15 +63,16 @@ class _HomeTabState extends State<HomeTab> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(children: [
-      GoogleMap(
-        mapType: MapType.normal,
-        myLocationEnabled: true,
-        initialCameraPosition: _kGooglePlex,
-        onMapCreated: (GoogleMapController controller) {
-          _controller.complete(controller);
-          googleMapController = controller;
-          googleMapController!.setMapStyle('''
+    return Stack(
+      children: [
+        GoogleMap(
+          mapType: MapType.normal,
+          myLocationEnabled: true,
+          initialCameraPosition: _kGooglePlex,
+          onMapCreated: (GoogleMapController controller) {
+            _controller.complete(controller);
+            googleMapController = controller;
+            googleMapController!.setMapStyle('''
                     [
                       {
                         "elementType": "geometry",
@@ -234,9 +235,83 @@ class _HomeTabState extends State<HomeTab> {
                       }
                     ]
                 ''');
-          locateDriverPosition();
-        },
-      )
-    ]);
+            locateDriverPosition();
+          },
+        ),
+        //ui for online offline driver
+        statusText != "Now Online"
+            ? Container(
+                height: MediaQuery.of(context).size.height,
+                width: double.infinity,
+                color: Colors.black87,
+              )
+            : Container(),
+        //button for online offline driver
+        Positioned(
+          top: statusText != "Now Online"
+              ? MediaQuery.of(context).size.height * 0.46
+              : 25,
+          left: 0,
+          right: 0,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  /*if(isDriverActive != true) //offline
+                  {
+                    driverIsOnlineNow();
+                    updateDriversLocationAtRealTime();
+
+                    setState(() {
+                      statusText = "Now Online";
+                      isDriverActive = true;
+                      buttonColor = Colors.transparent;
+                    });
+
+                    //display Toast
+                    Fluttertoast.showToast(msg: "you are Online Now");
+                  }
+                  else //online
+                  {
+                    driverIsOfflineNow();
+
+                    setState(() {
+                      statusText = "Now Offline";
+                      isDriverActive = false;
+                      buttonColor = Colors.grey;
+                    });
+
+                    //display Toast
+                    Fluttertoast.showToast(msg: "you are Offline Now");
+                  }*/
+                },
+                style: ElevatedButton.styleFrom(
+                  primary: buttonColor,
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(26),
+                  ),
+                ),
+                child: statusText != "Now Online"
+                    ? Text(
+                        statusText,
+                        style: const TextStyle(
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(
+                        Icons.phonelink_ring,
+                        color: Colors.white,
+                        size: 26,
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }
