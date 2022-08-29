@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:drivers_app/assistants/assistant_methods.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class HomeTab extends StatefulWidget {
@@ -17,6 +19,48 @@ class _HomeTabState extends State<HomeTab> {
     target: LatLng(37.42796133580664, -122.085749655962),
     zoom: 14.4746,
   );
+
+  Position? driverCurrentPosition;
+  var geoLocator = Geolocator();
+  LocationPermission? _locationPermission;
+
+  String statusText = "Now Offline";
+  Color buttonColor = Colors.grey;
+  bool isDriverActive = false;
+
+  checkIfLocationPermissionAllowed() async {
+    _locationPermission = await Geolocator.requestPermission();
+
+    if (_locationPermission == LocationPermission.denied) {
+      _locationPermission = await Geolocator.requestPermission();
+    }
+  }
+
+  locateDriverPosition() async {
+    Position cPosition = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+    driverCurrentPosition = cPosition;
+
+    LatLng latLngPosition = LatLng(
+        driverCurrentPosition!.latitude, driverCurrentPosition!.longitude);
+
+    CameraPosition cameraPosition =
+        CameraPosition(target: latLngPosition, zoom: 14);
+
+    googleMapController!
+        .animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
+
+    await AssistantMethods.searchAddressForGeographicCoOrdinates(
+        driverCurrentPosition!, context);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    checkIfLocationPermissionAllowed();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(children: [
@@ -190,6 +234,7 @@ class _HomeTabState extends State<HomeTab> {
                       }
                     ]
                 ''');
+          locateDriverPosition();
         },
       )
     ]);
