@@ -43,6 +43,7 @@ dependencies:
   http: ^0.13.5
   flutter_polyline_points: ^1.0.0
   flutter_geofire: ^2.0.1
+  firebase_messaging: ^13.0.0
 
 dev_dependencies:
   flutter_test:

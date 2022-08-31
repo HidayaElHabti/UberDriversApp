@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:drivers_app/assistants/assistant_methods.dart';
 import 'package:drivers_app/global/global.dart';
+import 'package:drivers_app/pushNotifications/push_notification_system.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -59,11 +60,19 @@ class _HomeTabState extends State<HomeTab> {
         driverCurrentPosition!, context);
   }
 
+  readCurrenDriverInformation() async {
+    currentUser = fAuth.currentUser;
+    PushNotificationSystem pushNotificationSystem = PushNotificationSystem();
+    pushNotificationSystem.initializeCloudMessaging();
+    pushNotificationSystem.generateAndSetToken();
+  }
+
   @override
   void initState() {
     super.initState();
 
     checkIfLocationPermissionAllowed();
+    readCurrenDriverInformation();
   }
 
   @override
