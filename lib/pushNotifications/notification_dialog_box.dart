@@ -1,3 +1,4 @@
+import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:drivers_app/global/global.dart';
 import 'package:drivers_app/models/user_ride_request_info.dart';
 import 'package:flutter/material.dart';
@@ -131,6 +132,10 @@ class _NotificationDialogBoxState extends State<NotificationDialogBox> {
                       primary: Colors.red,
                     ),
                     onPressed: () {
+                      audioPlayer.pause();
+                      audioPlayer.stop();
+                      audioPlayer = AssetsAudioPlayer();
+
                       //cancel the rideRequest
 
                       Navigator.pop(context);
@@ -148,6 +153,10 @@ class _NotificationDialogBoxState extends State<NotificationDialogBox> {
                       primary: Colors.green,
                     ),
                     onPressed: () {
+                      audioPlayer.pause();
+                      audioPlayer.stop();
+                      audioPlayer = AssetsAudioPlayer();
+
                       //accept the rideRequest
 
                       Navigator.pop(context);

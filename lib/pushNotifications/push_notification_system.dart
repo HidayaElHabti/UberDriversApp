@@ -1,3 +1,4 @@
+import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:drivers_app/global/global.dart';
 import 'package:drivers_app/models/user_ride_request_info.dart';
 import 'package:drivers_app/pushNotifications/notification_dialog_box.dart';
@@ -41,6 +42,9 @@ class PushNotificationSystem {
         .once()
         .then((snapData) {
       if (snapData.snapshot.value != null) {
+        audioPlayer.open(Audio("music/music_notification.mp3"));
+        audioPlayer.play();
+
         double originLatitude = double.parse(
             (snapData.snapshot.value! as Map)['origin']['latitude']);
         double originLongitude = double.parse(
