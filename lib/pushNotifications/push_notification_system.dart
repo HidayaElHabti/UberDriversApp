@@ -1,33 +1,39 @@
 import 'package:drivers_app/global/global.dart';
 import 'package:drivers_app/models/user_ride_request_info.dart';
+import 'package:drivers_app/pushNotifications/notification_dialog_box.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class PushNotificationSystem {
   FirebaseMessaging messaging = FirebaseMessaging.instance;
 
-  Future initializeCloudMessaging() async {
+  Future initializeCloudMessaging(BuildContext context) async {
     //terminated
     FirebaseMessaging.instance
         .getInitialMessage()
         .then((RemoteMessage? remoteMessage) {
       if (remoteMessage != null) {
-        readUserRideRequestInformation(remoteMessage.data["rideRequestId"]);
+        readUserRideRequestInformation(
+            remoteMessage.data["rideRequestId"], context);
       }
     });
     //forground
     FirebaseMessaging.onMessage.listen((RemoteMessage? remoteMessage) {
-      readUserRideRequestInformation(remoteMessage!.data["rideRequestId"]);
+      readUserRideRequestInformation(
+          remoteMessage!.data["rideRequestId"], context);
     });
     //background
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage? remoteMessage) {
-      readUserRideRequestInformation(remoteMessage!.data["rideRequestId"]);
+      readUserRideRequestInformation(
+          remoteMessage!.data["rideRequestId"], context);
     });
   }
 
-  readUserRideRequestInformation(String userRideRequestId) {
+  readUserRideRequestInformation(
+      String userRideRequestId, BuildContext context) {
     FirebaseDatabase.instance
         .ref()
         .child("All Ride Requests")
@@ -64,6 +70,13 @@ class PushNotificationSystem {
 
         userRideRequest.userName = userName;
         userRideRequest.userPhone = userPhone;
+
+        showDialog(
+          context: context,
+          builder: (BuildContext context) => NotificationDialogBox(
+            userRideRequestDetails: userRideRequest,
+          ),
+        );
       } else {
         Fluttertoast.showToast(msg: "This Ride Request doesn not exist.");
       }

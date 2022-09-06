@@ -63,7 +63,7 @@ class _HomeTabState extends State<HomeTab> {
   readCurrenDriverInformation() async {
     currentUser = fAuth.currentUser;
     PushNotificationSystem pushNotificationSystem = PushNotificationSystem();
-    pushNotificationSystem.initializeCloudMessaging();
+    pushNotificationSystem.initializeCloudMessaging(context);
     pushNotificationSystem.generateAndSetToken();
   }
 
