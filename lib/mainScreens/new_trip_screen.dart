@@ -1,8 +1,15 @@
+// ignore_for_file: prefer_collection_literals
+
 import 'dart:async';
 
+import 'package:drivers_app/assistants/assistant_methods.dart';
 import 'package:drivers_app/assistants/black_theme_google_map.dart';
+import 'package:drivers_app/global/global.dart';
 import 'package:drivers_app/models/user_ride_request_info.dart';
+import 'package:drivers_app/widgets/progress_dialog.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class NewTripScreen extends StatefulWidget {
@@ -28,6 +35,136 @@ class _NewTripScreenState extends State<NewTripScreen> {
   String? buttonTitle = "Arrived";
   Color? buttonColor = Colors.green;
 
+  Set<Marker> setOfMarkers = Set<Marker>();
+  Set<Circle> setOfCircle = Set<Circle>();
+  Set<Polyline> setOfPolyline = Set<Polyline>();
+  List<LatLng> polyLinePositionCoordinates = [];
+  PolylinePoints polylinePoints = PolylinePoints();
+
+  double mapPadding = 0;
+
+  //Step 1:: when driver accepts the user ride request
+  // originLatLng = driverCurrent Location
+  // destinationLatLng = user PickUp Location
+
+  //Step 2:: driver already picked up the user in his/her car
+  // originLatLng = user PickUp Location => driver current Location
+  // destinationLatLng = user DropOff Location
+  Future<void> drawPolyLineFromOriginToDestination(
+      LatLng originLatLng, LatLng destinationLatLng) async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => ProgressDialog(
+        message: "Please wait...",
+      ),
+    );
+
+    var directionDetailsInfo =
+        await AssistantMethods.obtainOriginToDestinationDirectionDetails(
+            originLatLng, destinationLatLng);
+
+    Navigator.pop(context);
+
+    PolylinePoints pPoints = PolylinePoints();
+    List<PointLatLng> decodedPolyLinePointsResultList =
+        pPoints.decodePolyline(directionDetailsInfo!.e_points!);
+
+    polyLinePositionCoordinates.clear();
+
+    if (decodedPolyLinePointsResultList.isNotEmpty) {
+      decodedPolyLinePointsResultList.forEach((PointLatLng pointLatLng) {
+        polyLinePositionCoordinates
+            .add(LatLng(pointLatLng.latitude, pointLatLng.longitude));
+      });
+    }
+
+    setOfPolyline.clear();
+
+    setState(() {
+      Polyline polyline = Polyline(
+        color: Colors.purpleAccent,
+        polylineId: const PolylineId("PolylineID"),
+        jointType: JointType.round,
+        points: polyLinePositionCoordinates,
+        startCap: Cap.roundCap,
+        endCap: Cap.roundCap,
+        geodesic: true,
+      );
+
+      setOfPolyline.add(polyline);
+    });
+
+    LatLngBounds boundsLatLng;
+    if (originLatLng.latitude > destinationLatLng.latitude &&
+        originLatLng.longitude > destinationLatLng.longitude) {
+      boundsLatLng =
+          LatLngBounds(southwest: destinationLatLng, northeast: originLatLng);
+    } else if (originLatLng.longitude > destinationLatLng.longitude) {
+      boundsLatLng = LatLngBounds(
+        southwest: LatLng(originLatLng.latitude, destinationLatLng.longitude),
+        northeast: LatLng(destinationLatLng.latitude, originLatLng.longitude),
+      );
+    } else if (originLatLng.latitude > destinationLatLng.latitude) {
+      boundsLatLng = LatLngBounds(
+        southwest: LatLng(destinationLatLng.latitude, originLatLng.longitude),
+        northeast: LatLng(originLatLng.latitude, destinationLatLng.longitude),
+      );
+    } else {
+      boundsLatLng =
+          LatLngBounds(southwest: originLatLng, northeast: destinationLatLng);
+    }
+
+    newTripGoogleMapController!
+        .animateCamera(CameraUpdate.newLatLngBounds(boundsLatLng, 65));
+
+    Marker originMarker = Marker(
+      markerId: const MarkerId("originID"),
+      position: originLatLng,
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+    );
+
+    Marker destinationMarker = Marker(
+      markerId: const MarkerId("destinationID"),
+      position: destinationLatLng,
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+    );
+
+    setState(() {
+      setOfMarkers.add(originMarker);
+      setOfMarkers.add(destinationMarker);
+    });
+
+    Circle originCircle = Circle(
+      circleId: const CircleId("originID"),
+      fillColor: Colors.green,
+      radius: 12,
+      strokeWidth: 3,
+      strokeColor: Colors.white,
+      center: originLatLng,
+    );
+
+    Circle destinationCircle = Circle(
+      circleId: const CircleId("destinationID"),
+      fillColor: Colors.red,
+      radius: 12,
+      strokeWidth: 3,
+      strokeColor: Colors.white,
+      center: destinationLatLng,
+    );
+
+    setState(() {
+      setOfCircle.add(originCircle);
+      setOfCircle.add(destinationCircle);
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    saveAssignedDriverDetailsToUserRideRequest();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -35,15 +172,32 @@ class _NewTripScreenState extends State<NewTripScreen> {
         children: [
           //google map
           GoogleMap(
+            padding: EdgeInsets.only(bottom: mapPadding),
             mapType: MapType.normal,
             myLocationEnabled: true,
             initialCameraPosition: _kGooglePlex,
+            markers: setOfMarkers,
+            circles: setOfCircle,
+            polylines: setOfPolyline,
             onMapCreated: (GoogleMapController controller) {
               _controllerGoogleMap.complete(controller);
               newTripGoogleMapController = controller;
 
+              setState(() {
+                mapPadding = 350;
+              });
+
               //black theme google map
               blackThemeGoogleMap(newTripGoogleMapController);
+
+              var driverCurrentLatLng = LatLng(driverCurrentPosition!.latitude,
+                  driverCurrentPosition!.longitude);
+
+              var userPickUpLatLng =
+                  widget.userRideRequestDetails!.originLatLng;
+
+              drawPolyLineFromOriginToDestination(
+                  driverCurrentLatLng, userPickUpLatLng!);
             },
           ),
 
@@ -213,5 +367,40 @@ class _NewTripScreenState extends State<NewTripScreen> {
         ],
       ),
     );
+  }
+
+  saveAssignedDriverDetailsToUserRideRequest() {
+    DatabaseReference databaseReference = FirebaseDatabase.instance
+        .ref()
+        .child("All Ride Requests")
+        .child(widget.userRideRequestDetails!.rideRequestId!);
+
+    Map driverLocationDataMap = {
+      "latitude": driverCurrentPosition!.latitude.toString(),
+      "longitude": driverCurrentPosition!.longitude.toString(),
+    };
+    databaseReference.child("driverLocation").set(driverLocationDataMap);
+
+    databaseReference.child("status").set("accepted");
+    databaseReference.child("driverId").set(onlineDriverData.id);
+    databaseReference.child("driverName").set(onlineDriverData.name);
+    databaseReference.child("driverPhone").set(onlineDriverData.phone);
+    databaseReference.child("car_details").set(
+        onlineDriverData.car_color.toString() +
+            onlineDriverData.car_model.toString());
+
+    saveRideRequestIdToDriverHistory();
+  }
+
+  saveRideRequestIdToDriverHistory() {
+    DatabaseReference tripsHistoryRef = FirebaseDatabase.instance
+        .ref()
+        .child("drivers")
+        .child(currentUser!.uid)
+        .child("tripsHistory");
+
+    tripsHistoryRef
+        .child(widget.userRideRequestDetails!.rideRequestId!)
+        .set(true);
   }
 }
