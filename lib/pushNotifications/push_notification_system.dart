@@ -45,6 +45,8 @@ class PushNotificationSystem {
         audioPlayer.open(Audio("music/music_notification.mp3"));
         audioPlayer.play();
 
+        String? rideRequestId = snapData.snapshot.key;
+
         double originLatitude = double.parse(
             (snapData.snapshot.value! as Map)['origin']['latitude']);
         double originLongitude = double.parse(
@@ -64,6 +66,8 @@ class PushNotificationSystem {
 
         UserRideRequestInformation userRideRequest =
             UserRideRequestInformation();
+        userRideRequest.rideRequestId = rideRequestId;
+
         userRideRequest.originLatLng = LatLng(originLatitude, originLongitude);
         userRideRequest.destinationLatLng =
             LatLng(destinationLatitude, destinationLongitude);
