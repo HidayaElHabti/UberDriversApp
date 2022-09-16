@@ -1,4 +1,5 @@
 import 'package:assets_audio_player/assets_audio_player.dart';
+import 'package:drivers_app/assistants/assistant_methods.dart';
 import 'package:drivers_app/global/global.dart';
 import 'package:drivers_app/mainScreens/new_trip_screen.dart';
 import 'package:drivers_app/models/user_ride_request_info.dart';
@@ -203,6 +204,7 @@ class _NotificationDialogBoxState extends State<NotificationDialogBox> {
             .child("newRideStatus")
             .set("accepted");
 
+        AssistantMethods.pauseLiveLocationUpdates();
         //trip started now - send driver to new tripScreen
         Navigator.push(
             context,
