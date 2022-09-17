@@ -446,7 +446,62 @@ class _NewTripScreenState extends State<NewTripScreen> {
                     const SizedBox(height: 10.0),
 
                     ElevatedButton.icon(
-                      onPressed: () {},
+                      onPressed: () async {
+                        if (rideRequestStatus ==
+                            "accepted") //driver has arrived at user PickUp Location
+                        {
+                          rideRequestStatus = "arrived";
+
+                          FirebaseDatabase.instance
+                              .ref()
+                              .child("All Ride Requests")
+                              .child(
+                                  widget.userRideRequestDetails!.rideRequestId!)
+                              .child("status")
+                              .set(rideRequestStatus);
+
+                          setState(() {
+                            buttonTitle = "Let's Go"; //start the trip
+                            buttonColor = Colors.lightGreen;
+                          });
+
+                          showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (BuildContext c) => ProgressDialog(
+                              message: "Loading...",
+                            ),
+                          );
+
+                          await drawPolyLineFromOriginToDestination(
+                              widget.userRideRequestDetails!.originLatLng!,
+                              widget
+                                  .userRideRequestDetails!.destinationLatLng!);
+
+                          Navigator.pop(context);
+                        }
+                        //[user has already sit in driver's car. Driver start trip now] - Lets Go Button
+                        else if (rideRequestStatus == "arrived") {
+                          rideRequestStatus = "ontrip";
+
+                          FirebaseDatabase.instance
+                              .ref()
+                              .child("All Ride Requests")
+                              .child(
+                                  widget.userRideRequestDetails!.rideRequestId!)
+                              .child("status")
+                              .set(rideRequestStatus);
+
+                          setState(() {
+                            buttonTitle = "End Trip"; //end the trip
+                            buttonColor = Colors.redAccent;
+                          });
+                        }
+                        //[user/Driver reached to the dropOff Destination Location] - End Trip Button
+                        else if (rideRequestStatus == "ontrip") {
+                          endTripNow();
+                        }
+                      },
                       style: ElevatedButton.styleFrom(
                         primary: buttonColor,
                       ),
@@ -472,6 +527,50 @@ class _NewTripScreenState extends State<NewTripScreen> {
         ],
       ),
     );
+  }
+
+  endTripNow() async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) => ProgressDialog(
+        message: "Please wait...",
+      ),
+    );
+
+    //get the tripDirectionDetails = distance travelled
+    var currentDriverPositionLatLng = LatLng(
+      onlineDriverCurrentPosition!.latitude,
+      onlineDriverCurrentPosition!.longitude,
+    );
+
+    var tripDirectionDetails =
+        await AssistantMethods.obtainOriginToDestinationDirectionDetails(
+            currentDriverPositionLatLng,
+            widget.userRideRequestDetails!.originLatLng!);
+
+    //fare amount
+    double totalFareAmount =
+        AssistantMethods.calculateFareAmountFromOriginToDestination(
+            tripDirectionDetails!);
+
+    FirebaseDatabase.instance
+        .ref()
+        .child("All Ride Requests")
+        .child(widget.userRideRequestDetails!.rideRequestId!)
+        .child("fareAmount")
+        .set(totalFareAmount.toString());
+
+    FirebaseDatabase.instance
+        .ref()
+        .child("All Ride Requests")
+        .child(widget.userRideRequestDetails!.rideRequestId!)
+        .child("status")
+        .set("ended");
+
+    streamSubscriptionDriverLivePosition!.cancel();
+
+    Navigator.pop(context);
   }
 
   saveAssignedDriverDetailsToUserRideRequest() {

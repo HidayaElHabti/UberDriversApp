@@ -88,4 +88,28 @@ class AssistantMethods {
     Geofire.setLocation(currentUser!.uid, driverCurrentPosition!.latitude,
         driverCurrentPosition!.longitude);
   }
+
+  static double calculateFareAmountFromOriginToDestination(
+      DirectionDetailsInfo directionDetailsInfo) {
+    double timeTraveledFareAmountPerMinute =
+        (directionDetailsInfo.duration_value! / 60) * 0.1;
+    double distanceTraveledFareAmountPerKilometer =
+        (directionDetailsInfo.duration_value! / 1000) * 0.1;
+
+    //USD
+    double totalFareAmount = timeTraveledFareAmountPerMinute +
+        distanceTraveledFareAmountPerKilometer;
+
+    if (driverVehicleType == "bike") {
+      double resultFareAmount = (totalFareAmount.truncate()) / 2.0;
+      return resultFareAmount;
+    } else if (driverVehicleType == "uber-go") {
+      return totalFareAmount.truncate().toDouble();
+    } else if (driverVehicleType == "uber-x") {
+      double resultFareAmount = (totalFareAmount.truncate()) * 2.0;
+      return resultFareAmount;
+    } else {
+      return totalFareAmount.truncate().toDouble();
+    }
+  }
 }

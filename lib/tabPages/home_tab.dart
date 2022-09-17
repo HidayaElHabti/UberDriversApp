@@ -81,6 +81,7 @@ class _HomeTabState extends State<HomeTab> {
             (snap.snapshot.value as Map)["car_details"]["car_model"];
         onlineDriverData.car_number =
             (snap.snapshot.value as Map)["car_details"]["car_number"];
+        driverVehicleType = (snap.snapshot.value as Map)["car_details"]["type"];
       }
     });
 
